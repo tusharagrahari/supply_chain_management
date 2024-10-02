@@ -1,0 +1,215 @@
+# Copyright IBM Corp. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+
+---
+################################################################################
+#
+#   Section: Organizations
+#
+#   - This section defines the different organizational identities which will
+#   be referenced later in the configuration.
+#
+################################################################################
+Organizations:
+
+   - &OrdererOrg
+       Name: OrdererOrg
+       ID: OrdererMSP
+       MSPDir: ../organizations/ordererOrganizations/example.com/msp
+       Policies:
+           Readers:
+               Type: Signature
+               Rule: "OR('OrdererMSP.member')"
+           Writers:
+               Type: Signature
+               Rule: "OR('OrdererMSP.member')"
+           Admins:
+               Type: Signature
+               Rule: "OR('OrdererMSP.admin')"
+       OrdererEndpoints:
+           - orderer1.example.com:7050
+           - orderer2.example.com:8050
+           - orderer3.example.com:9050
+
+   - &ProducerOrg
+       Name: ProducerMSP
+       ID: ProducerMSP
+       MSPDir: ../organizations/peerOrganizations/producer.example.com/msp
+       Policies:
+           Readers:
+               Type: Signature
+               Rule: "OR('ProducerMSP.admin', 'ProducerMSP.peer', 'ProducerMSP.client')"
+           Writers:
+               Type: Signature
+               Rule: "OR('ProducerMSP.admin', 'ProducerMSP.client')"
+           Admins:
+               Type: Signature
+               Rule: "OR('ProducerMSP.admin')"
+           Endorsement:
+               Type: Signature
+               Rule: "OR('ProducerMSP.peer')"
+
+   - &SupplierOrg
+       Name: SupplierMSP
+       ID: SupplierMSP
+       MSPDir: ../organizations/peerOrganizations/supplier.example.com/msp
+       Policies:
+           Readers:
+               Type: Signature
+               Rule: "OR('SupplierMSP.admin', 'SupplierMSP.peer', 'SupplierMSP.client')"
+           Writers:
+               Type: Signature
+               Rule: "OR('SupplierMSP.admin', 'SupplierMSP.client')"
+           Admins:
+               Type: Signature
+               Rule: "OR('SupplierMSP.admin')"
+           Endorsement:
+               Type: Signature
+               Rule: "OR('SupplierMSP.peer')"
+
+   - &WholesalerOrg
+       Name: WholesalerMSP
+       ID: WholesalerMSP
+       MSPDir: ../organizations/peerOrganizations/wholesaler.example.com/msp
+       Policies:
+           Readers:
+               Type: Signature
+               Rule: "OR('WholesalerMSP.admin', 'WholesalerMSP.peer', 'WholesalerMSP.client')"
+           Writers:
+               Type: Signature
+               Rule: "OR('WholesalerMSP.admin', 'WholesalerMSP.client')"
+           Admins:
+               Type: Signature
+               Rule: "OR('WholesalerMSP.admin')"
+           Endorsement:
+               Type: Signature
+               Rule: "OR('WholesalerMSP.peer')"
+
+################################################################################
+#
+#   SECTION: Capabilities
+#
+################################################################################
+Capabilities:
+   Channel: &ChannelCapabilities
+       V2_0: true
+
+   Orderer: &OrdererCapabilities
+       V2_0: true
+
+   Application: &ApplicationCapabilities
+       V2_0: true
+
+################################################################################
+#
+#   SECTION: Application
+#
+################################################################################
+Application: &ApplicationDefaults
+   Organizations:
+   Policies:
+       Readers:
+           Type: ImplicitMeta
+           Rule: "ANY Readers"
+       Writers:
+           Type: ImplicitMeta
+           Rule: "ANY Writers"
+       Admins:
+           Type: ImplicitMeta
+           Rule: "MAJORITY Admins"
+       LifecycleEndorsement:
+           Type: ImplicitMeta
+           Rule: "MAJORITY Endorsement"
+       Endorsement:
+           Type: ImplicitMeta
+           Rule: "MAJORITY Endorsement"
+   Capabilities:
+       <<: *ApplicationCapabilities
+
+################################################################################
+#
+#   SECTION: Orderer
+#
+################################################################################
+Orderer: &OrdererDefaults
+   OrdererType: etcdraft
+   Addresses:
+       - orderer1.example.com:7050
+       - orderer2.example.com:8050
+       - orderer3.example.com:9050
+   EtcdRaft:
+       Consenters:
+       - Host: orderer1.example.com
+         Port: 7050
+         ClientTLSCert: ../organizations/ordererOrganizations/example.com/orderers/orderer1.example.com/tls/server.crt
+         ServerTLSCert: ../organizations/ordererOrganizations/example.com/orderers/orderer1.example.com/tls/server.crt
+       - Host: orderer2.example.com
+         Port: 8050
+         ClientTLSCert: ../organizations/ordererOrganizations/example.com/orderers/orderer2.example.com/tls/server.crt
+         ServerTLSCert: ../organizations/ordererOrganizations/example.com/orderers/orderer2.example.com/tls/server.crt
+       - Host: orderer3.example.com
+         Port: 9050
+         ClientTLSCert: ../organizations/ordererOrganizations/example.com/orderers/orderer3.example.com/tls/server.crt
+         ServerTLSCert: ../organizations/ordererOrganizations/example.com/orderers/orderer3.example.com/tls/server.crt
+   BatchTimeout: 2s
+   BatchSize:
+       MaxMessageCount: 10
+       AbsoluteMaxBytes: 99 MB
+       PreferredMaxBytes: 512 KB
+   Organizations:
+   Policies:
+       Readers:
+           Type: ImplicitMeta
+           Rule: "ANY Readers"
+       Writers:
+           Type: ImplicitMeta
+           Rule: "ANY Writers"
+       Admins:
+           Type: ImplicitMeta
+           Rule: "MAJORITY Admins"
+       BlockValidation:
+           Type: ImplicitMeta
+           Rule: "ANY Writers"
+
+################################################################################
+#
+#   CHANNEL
+#
+################################################################################
+Channel: &ChannelDefaults
+   Policies:
+       Readers:
+           Type: ImplicitMeta
+           Rule: "ANY Readers"
+       Writers:
+           Type: ImplicitMeta
+           Rule: "ANY Writers"
+       Admins:
+           Type: ImplicitMeta
+           Rule: "MAJORITY Admins"
+   Capabilities:
+       <<: *ChannelCapabilities
+
+################################################################################
+#
+#   Profile
+#
+################################################################################
+Profiles:
+
+   ThreeOrgsApplicationGenesis:
+       <<: *ChannelDefaults
+       Orderer:
+           <<: *OrdererDefaults
+           Organizations:
+               - *OrdererOrg
+           Capabilities: *OrdererCapabilities
+       Application:
+           <<: *ApplicationDefaults
+           Organizations:
+               - *ProducerOrg
+               - *SupplierOrg
+               - *WholesalerOrg
+           Capabilities: *ApplicationCapabilities
